@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Modelos baixados pelo rembg (grandes, baixados automaticamente)
+*.onnx
+
+# IDEs / editores
+.vscode/
+.idea/
+
+# SO
+Thumbs.db
+desktop.ini
+.DS_Store

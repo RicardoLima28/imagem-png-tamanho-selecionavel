@@ -1,0 +1,9 @@
+# Core dependencies
+customtkinter>=5.2.2     # Themed Tkinter GUI (dark mode support)
+rembg>=2.0.50            # AI background removal (pulls in onnxruntime)
+Pillow>=10.0.0           # Image loading, resizing, PNG export
+numpy>=1.24.0            # Required by rembg / onnxruntime
+
+# Optional: drag-and-drop support.
+# The app runs fine without it — drag & drop is simply disabled if missing.
+tkinterdnd2>=0.4.2
