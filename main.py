@@ -384,11 +384,20 @@ class BackgroundRemoverApp(_BaseWindow):
         self.output_label.pack(padx=20, pady=(0, 12), anchor="w")
 
         # --- 4) Output resolution --------------------------------------
-        ctk.CTkLabel(controls, text="Resolução de saída (pixels)",
-                     font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(8, 2), anchor="w")
+        # Interruptor: desligado = só remove o fundo, mantendo o tamanho original.
+        self.resize_var = ctk.BooleanVar(value=False)
+        ctk.CTkSwitch(controls, text="Redimensionar imagem",
+                      variable=self.resize_var,
+                      command=self._on_toggle_resize).pack(padx=20, pady=(8, 4), anchor="w")
 
-        res_frame = ctk.CTkFrame(controls, fg_color="transparent")
-        res_frame.pack(padx=20, pady=(0, 4), fill="x")
+        # Seção de tamanho: só aparece quando o redimensionamento está ligado.
+        self.resize_section = ctk.CTkFrame(controls, fg_color="transparent")
+
+        ctk.CTkLabel(self.resize_section, text="Resolução de saída (pixels)",
+                     font=ctk.CTkFont(weight="bold")).pack(pady=(4, 2), anchor="w")
+
+        res_frame = ctk.CTkFrame(self.resize_section, fg_color="transparent")
+        res_frame.pack(pady=(0, 4), fill="x")
         res_frame.grid_columnconfigure((0, 1), weight=1)
 
         # Width / height entries. Left blank = "keep original on this axis".
@@ -399,12 +408,12 @@ class BackgroundRemoverApp(_BaseWindow):
 
         # --- 5/aspect) Preserve aspect ratio ---------------------------
         self.keep_aspect_var = ctk.BooleanVar(value=True)
-        ctk.CTkCheckBox(controls, text="Preservar proporção",
-                        variable=self.keep_aspect_var).pack(padx=20, pady=(8, 4), anchor="w")
+        ctk.CTkCheckBox(self.resize_section, text="Preservar proporção",
+                        variable=self.keep_aspect_var).pack(pady=(8, 4), anchor="w")
 
         # Quick preset buttons for common sizes.
-        preset_frame = ctk.CTkFrame(controls, fg_color="transparent")
-        preset_frame.pack(padx=20, pady=(0, 12), fill="x")
+        preset_frame = ctk.CTkFrame(self.resize_section, fg_color="transparent")
+        preset_frame.pack(pady=(0, 4), fill="x")
         for i, (label, size) in enumerate(
             [("512²", (512, 512)), ("1024²", (1024, 1024)), ("Original", (None, None))]  # "Original" já está em português
         ):
@@ -415,8 +424,10 @@ class BackgroundRemoverApp(_BaseWindow):
             ).pack(side="left", padx=(0 if i == 0 else 6, 0))
 
         # --- Appearance toggle (dark mode requirement) -----------------
-        ctk.CTkLabel(controls, text="Aparência",
-                     font=ctk.CTkFont(weight="bold")).pack(padx=20, pady=(8, 2), anchor="w")
+        # Guardamos o rótulo para poder reinserir a seção de tamanho antes dele.
+        self.appearance_title = ctk.CTkLabel(controls, text="Aparência",
+                                             font=ctk.CTkFont(weight="bold"))
+        self.appearance_title.pack(padx=20, pady=(16, 2), anchor="w")
         self.appearance_menu = ctk.CTkOptionMenu(
             controls, values=["Escuro", "Claro", "Sistema"],
             command=self._on_appearance_change,
@@ -488,6 +499,14 @@ class BackgroundRemoverApp(_BaseWindow):
                                    "Por favor, solte arquivos de imagem (PNG, JPG, WEBP, …).")
 
     # ------------------------------------------------------- UI callbacks --
+    def _on_toggle_resize(self) -> None:
+        """Mostra ou esconde as opções de tamanho conforme o interruptor."""
+        if self.resize_var.get():
+            self.resize_section.pack(padx=20, pady=(0, 4), fill="x",
+                                     before=self.appearance_title)
+        else:
+            self.resize_section.pack_forget()
+
     def _apply_preset(self, size: tuple[Optional[int], Optional[int]]) -> None:
         """Fill the width/height entries from a preset button."""
         w, h = size
@@ -557,11 +576,15 @@ class BackgroundRemoverApp(_BaseWindow):
             messagebox.showerror("Nenhuma pasta de saída", "Por favor, escolha uma pasta de saída.")
             return
 
-        try:
-            width, height = self._read_dimensions()
-        except ValueError as exc:
-            messagebox.showerror("Resolução inválida", str(exc))
-            return
+        # Com o redimensionamento desligado, só remove o fundo (tamanho original)
+        # e ignora o que estiver digitado nos campos de largura/altura.
+        width = height = None
+        if self.resize_var.get():
+            try:
+                width, height = self._read_dimensions()
+            except ValueError as exc:
+                messagebox.showerror("Resolução inválida", str(exc))
+                return
 
         opts = ProcessOptions(
             width=width, height=height,

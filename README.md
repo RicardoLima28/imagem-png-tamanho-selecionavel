@@ -53,8 +53,9 @@ python main.py
 
 1. Click **Select Image(s)** (or drag images onto the window).
 2. Click **Select Output Folder**.
-3. (Optional) Type a **Width** / **Height**, or use a preset. Leave blank to
-   keep the original size. Toggle **Preserve aspect ratio** as needed.
+3. By default the app **only removes the background** and keeps the original
+   size. To resize, turn on **Redimensionar imagem**, then type a **Width** /
+   **Height** or use a preset, and toggle **Preserve aspect ratio** as needed.
 4. Click **Remove Background**. Watch the progress bar; the result previews on
    the right over a checkerboard (so you can see the transparency).
 5. Finished PNGs are written to your output folder using the original filenames.
